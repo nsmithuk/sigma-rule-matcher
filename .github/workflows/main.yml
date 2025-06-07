@@ -46,6 +46,6 @@ jobs:
     - name: Extract version from __about__.py
       id: get_version
       run: |
-        VERSION=$(hatch --env dev run python -c "from sigma_rule_matcher.__about__ import __version__; print(__version__)")
+        VERSION=$(hatch run python -c "from sigma_rule_matcher.__about__ import __version__; print(__version__)")
         echo "__about__.py version: $VERSION"
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"        
