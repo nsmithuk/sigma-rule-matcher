@@ -1,0 +1,73 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sigma-rule-matcher"
+dynamic = ["version"]
+description = ''
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Neil Smith", email = "neil@nsmith.net" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  "boolean.py>=5.0,<6.0",
+  "pySigma==0.11.23",
+]
+
+[project.urls]
+Documentation = "https://github.com/nsmithuk/sigma-rule-matcher#readme"
+Issues = "https://github.com/nsmithuk/sigma-rule-matcher/issues"
+Source = "https://github.com/nsmithuk/sigma-rule-matcher"
+
+[tool.hatch.version]
+path = "src/sigma_rule_matcher/__about__.py"
+
+[tool.ruff.lint]
+ignore = [
+  "RET504",  # Unnecessary variable assignment before return (e.g., assigning to a variable then immediately returning it)
+  "EM101",   # Exception message should be assigned to a variable, not passed as a string literal (e.g., `raise ValueError("...")`)
+  "EM102",   # Exception must not use an f-string literal, assign to variable first
+]
+
+[tool.ruff.format]
+preview = true
+quote-style = "double"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/sigma_rule_matcher tests}"
+
+[tool.coverage.run]
+source_pkgs = ["sigma_rule_matcher", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/sigma_rule_matcher/__about__.py",
+]
+
+[tool.coverage.paths]
+sigma_rule_matcher = ["src/sigma_rule_matcher", "*/sigma-rule-matcher/src/sigma_rule_matcher"]
+tests = ["tests", "*/sigma-rule-matcher/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
