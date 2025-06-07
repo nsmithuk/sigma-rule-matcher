@@ -31,12 +31,13 @@ class RuleMatcher:
 
         # ---
 
-        self.detection_items: dict[str, DetectionEvaluator] = {}
+        self.detection_items: dict[int, DetectionEvaluator] = {}
 
         for symbol in self._condition.get_symbols():
             detection = self.rule.detection.detections[str(symbol)]
             for item in detection.detection_items:
-                self.detection_items[f"{symbol}/{item.field}"] = DetectionEvaluator(item)
+                # We'll store it under the detection item's internal id, which will always be unique.
+                self.detection_items[id(item)] = DetectionEvaluator(item)
 
 
     def get_rule_condition(self) -> Condition:
@@ -49,7 +50,7 @@ class RuleMatcher:
         for symbol in self.get_rule_condition().get_symbols():
             detection = self.rule.detection.detections[symbol]
 
-            selector_result = self._evaluate_detection_group(event, symbol, detection)
+            selector_result = self._evaluate_detection_group(event, detection)
 
             result = expression.evaluate(symbol=symbol, value=selector_result)   # None | bool
 
@@ -60,12 +61,12 @@ class RuleMatcher:
         # If we've not simplified to TRUE by now, we're done.
         return False
 
-    def _evaluate_detection_group(self, event: dict[str, Any], symbol: str, detection: SigmaDetection) -> bool:
+    def _evaluate_detection_group(self, event: dict[str, Any], detection: SigmaDetection) -> bool:
         if detection.item_linking is not ConditionAND:
             raise NotImplementedError("Only AND is supported for item linking")
 
         for item in detection.detection_items:
-            match = self._evaluate_selector_item(event, str(symbol), item)
+            match = self._evaluate_selector_item(event, item)
             if not match:
                 return False
 
@@ -73,7 +74,7 @@ class RuleMatcher:
 
         return True
 
-    def _evaluate_selector_item(self, event: dict[str, Any], symbol: str, detection_item: SigmaDetectionItem) -> bool:
+    def _evaluate_selector_item(self, event: dict[str, Any], detection_item: SigmaDetectionItem) -> bool:
 
         # We note that a value of None (null) could be explicitly set; so we have a special type for NotFound.
         event_value = get_by_dots(event, detection_item.field, self._missing_field)
@@ -98,7 +99,7 @@ class RuleMatcher:
 
         # ---
 
-        new_matcher = self.detection_items.get(f"{symbol}/{detection_item.field}")
+        new_matcher = self.detection_items.get(id(detection_item))
 
         if not new_matcher:
             raise RuntimeError("No matcher found for field {symbol}/{detection_item.field}")

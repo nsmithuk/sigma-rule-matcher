@@ -117,3 +117,19 @@ def test_no_match_with_contains_list_when_none_match():
     matcher = RuleMatcher(rule)
     event = { 'field': 'gamma-delta' }
     assert matcher.match(event) is False
+
+def test_match_with_contains_and_startswith_modifiers_on_same_field():
+    sigma_rule = """
+    title: Contains modifier match
+    logsource:
+      product: test
+    detection:
+      selection1:
+        field|contains: part
+        field|startswith: some
+      condition: selection1
+    """
+    rule = SigmaRule.from_yaml(sigma_rule)
+    matcher = RuleMatcher(rule)
+    event = { 'field': 'some-partial-value' }
+    assert matcher.match(event) is True
