@@ -43,9 +43,57 @@ jobs:
       run: |
         hatch test
 
+
     - name: Extract version from __about__.py
       id: get_version
       run: |
         VERSION=$(hatch run python -c "from sigma_rule_matcher.__about__ import __version__; print(__version__)")
         echo "__about__.py version: $VERSION"
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"        
+    
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that tag version matches __about__.py
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          FILE_VERSION="${{ needs.test.outputs.file_version }}"
+
+          echo "Git tag version: $TAG_VERSION"
+          echo "__about__.py version: $FILE_VERSION"
+
+          if [ "$TAG_VERSION" != "$FILE_VERSION" ]; then
+            echo "❌ Tag version ($TAG_VERSION) does not match __about__.py version ($FILE_VERSION)"
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install hatch
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install hatch
+
+      - name: Build package
+        run: |
+          hatch build
+          
+          #List out what's in the package
+          tar -tzf dist/*.tar.gz
+          unzip -l dist/*.whl
+
+      - name: Publish to PyPI
+        env:
+          HATCH_INDEX_USER: __token__
+          HATCH_INDEX_AUTH: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          hatch publish
