@@ -45,7 +45,7 @@ class TrueConditionEvaluator(BooleanConditionEvaluator):
     def evaluate(self, symbol:str, *, value: bool) -> ConditionCheckResult:
         if symbol != self.symbol:
             raise Exception(f"Invalid symbol {symbol}")
-        return True if value else False
+        return value
 
 class FalseConditionEvaluator(TrueConditionEvaluator):
     def evaluate(self, symbol:str, *, value: bool) -> ConditionCheckResult:
